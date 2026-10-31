@@ -16,11 +16,19 @@ jobs:
         with:
           gradle-version: '8.7'
       - name: Build debug APK
-        run: gradle assembleDebug --no-daemon
         env:
           EWELINK_APP_ID: ${{ secrets.EWELINK_APP_ID }}
           EWELINK_APP_SECRET: ${{ secrets.EWELINK_APP_SECRET }}
+        run: |
+          F=$(find . -name settings.gradle.kts | head -1)
+          if [ -z "$F" ]; then echo "settings.gradle.kts repoda yok"; ls -R | head -50; exit 1; fi
+          DIR=$(dirname "$F")
+          echo "Proje klasoru: $DIR"
+          cd "$DIR"
+          gradle assembleDebug --no-daemon
+          mkdir -p "$GITHUB_WORKSPACE/out"
+          cp app/build/outputs/apk/debug/app-debug.apk "$GITHUB_WORKSPACE/out/"
       - uses: actions/upload-artifact@v4
         with:
           name: KombiKontrol-APK
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: out/app-debug.apk
